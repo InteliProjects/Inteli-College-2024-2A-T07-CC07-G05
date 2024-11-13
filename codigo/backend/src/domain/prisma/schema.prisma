@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"  // ou seu banco de dados escolhido, como "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo para Usuários
+model User {
+  id       String   @id @default(uuid())  // ID usando UUID para garantir unicidade
+  username String
+  email    String   @unique
+  password String
+}
+
+// Modelo para Clientes
+model Customer {
+  id       String   @id @default(uuid())  // ID como UUID
+  name     String
+  address  String
+  zipCode  String
+  phone    String
+  email    String   @unique
+  orders   Order[]  // Relacionamento com a tabela de Pedidos
+}
+
+// Modelo para Lojas
+model Store {
+  id              String  @id @default(uuid())  // ID usando UUID
+  sales24HrCount  Int
+  status          String
+  zipCode         String
+  address         String
+  zipCodeRange    String
+  stock           Stock[]   // Relacionamento com a tabela de Estoque
+  orders          Order[]   // Relacionamento com a tabela de Pedidos
+}
+
+// Modelo para Produtos
+model Product {
+  id             String   @id @default(uuid())  // ID usando UUID
+  name           String
+  sku            String   @unique
+  category       String
+  description    String
+  price          Float
+  stock          Stock[]        // Relacionamento com a tabela de Estoque
+  orderProducts  OrderProduct[] // Relacionamento com a tabela de PedidoProduto
+}
+
+// Modelo para Estoque
+model Stock {
+  id        String   @id @default(uuid())  // ID usando UUID
+  storeId   String
+  productId String
+  quantity  Int
+  store     Store    @relation(fields: [storeId], references: [id])  // Relacionamento com a tabela de Lojas
+  product   Product  @relation(fields: [productId], references: [id])  // Relacionamento com a tabela de Produtos
+  movements StockMovement[]  // Relacionamento com a tabela de Movimentações de Estoque
+}
+
+// Modelo para Movimentações de Estoque
+model StockMovement {
+  id           String   @id @default(uuid())  // ID usando UUID
+  stockId      String
+  movementType String
+  quantity     Int
+  date         DateTime @default(now())
+  stock        Stock    @relation(fields: [stockId], references: [id])  // Relacionamento com a tabela de Estoque
+}
+
+// Modelo para Pedidos
+model Order {
+  id           String   @id @default(uuid())  // ID usando UUID
+  storeId      String
+  customerId   String
+  date         DateTime @default(now())
+  status       String
+  store        Store    @relation(fields: [storeId], references: [id])  // Relacionamento com a tabela de Lojas
+  customer     Customer @relation(fields: [customerId], references: [id])  // Relacionamento com a tabela de Clientes
+  orderProducts OrderProduct[]  // Relacionamento com a tabela de PedidoProduto
+}
+
+// Modelo para PedidoProduto
+model OrderProduct {
+  id        String   @id @default(uuid())  // ID usando UUID
+  orderId   String
+  productId String
+  quantity  Int
+  order     Order    @relation(fields: [orderId], references: [id])  // Relacionamento com a tabela de Pedidos
+  product   Product  @relation(fields: [productId], references: [id])  // Relacionamento com a tabela de Produtos
+}
